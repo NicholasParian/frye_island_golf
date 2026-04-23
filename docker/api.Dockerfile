@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1.6
-# Build and run the Node API (Fastify + Prisma)
-# Use the full `bookworm` image (not `-slim`) so OpenSSL + ca-certificates are present without `apt-get`
-# during build. That avoids failures when the builder cannot reach deb.debian.org (DNS / corporate proxy).
-FROM node:22-bookworm AS base
+# Build and run the Node API (Fastify + Prisma) — `bookworm-slim` is much smaller; Prisma still needs OpenSSL
+# and TLS roots (install them below). If `apt-get` fails to resolve `deb.debian.org`, fix Docker DNS, or use
+# a non-slim base for that environment only.
+FROM node:22-bookworm-slim AS base
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
