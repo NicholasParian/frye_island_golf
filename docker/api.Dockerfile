@@ -1,9 +1,7 @@
 # Build and run the Node API (Fastify + Prisma)
-FROM node:22-bookworm-slim AS base
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Use the full `bookworm` image (not `-slim`) so OpenSSL + ca-certificates are present without `apt-get`
+# during build. That avoids failures when the builder cannot reach deb.debian.org (DNS / corporate proxy).
+FROM node:22-bookworm AS base
 
 WORKDIR /app
 
