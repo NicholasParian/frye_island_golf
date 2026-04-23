@@ -9,22 +9,18 @@ const prisma = new PrismaClient();
 async function main() {
   const email = process.env.ADMIN_EMAIL ?? "admin@fryeislandgolf.local";
   const password = process.env.ADMIN_PASSWORD ?? "change-me-admin-password";
-  const passwordHash = await hashPassword(password);
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    console.log(`Admin already present (${email}), leaving password unchanged`);
+    return;
+  }
 
-  await prisma.user.upsert({
-    where: { email },
-    create: {
-      email,
-      passwordHash,
-      role: "ADMIN",
-    },
-    update: {
-      passwordHash,
-      role: "ADMIN",
-    },
+  const passwordHash = await hashPassword(password);
+  await prisma.user.create({
+    data: { email, passwordHash, role: "ADMIN" },
   });
 
-  console.log(`Seeded admin user: ${email}`);
+  console.log(`Seeded new admin user: ${email}`);
 }
 
 main()

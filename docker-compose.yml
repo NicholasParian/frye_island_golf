@@ -40,6 +40,10 @@ services:
       PUBLIC_PATH_PREFIX: ${PUBLIC_PATH_PREFIX:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # Used by `prisma db seed` in api-entrypoint.sh (after migrate). No password reset if user already exists.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@fryeislandgolf.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-admin-password}
+      SKIP_DB_SEED: ${SKIP_DB_SEED:-0}
     depends_on:
       db:
         condition: service_healthy
