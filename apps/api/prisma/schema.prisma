@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PUBLIC
+  MEMBER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  REFUNDED
+  FAILED
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  role         UserRole       @default(PUBLIC)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  bookings     Booking[]
+  refreshTokens RefreshToken[]
+  scoreEntries ScoreEntry[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model CourseDayConfig {
+  id                 String    @id @default(cuid())
+  date               DateTime  @db.Date
+  intervalMinutes    Int       @default(8)
+  firstTeeTime       String
+  lastTeeTime        String
+  totalCarts         Int       @default(20)
+  allowPublicBooking Boolean   @default(true)
+  timezone           String    @default("America/New_York")
+  slots              TeeSlot[]
+
+  @@unique([date])
+}
+
+model TeeSlot {
+  id                String          @id @default(cuid())
+  courseDayConfigId String
+  courseDayConfig   CourseDayConfig @relation(fields: [courseDayConfigId], references: [id], onDelete: Cascade)
+  startsAt          DateTime
+  booking           Booking?
+
+  @@unique([courseDayConfigId, startsAt])
+  @@index([startsAt])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  teeSlotId       String        @unique
+  teeSlot         TeeSlot       @relation(fields: [teeSlotId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  partySize       Int
+  cartCount       Int           @default(0)
+  status          BookingStatus
+  amountCents     Int?
+  stripeSessionId String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  players         BookingPlayer[]
+  payment         Payment?
+}
+
+model BookingPlayer {
+  id          String  @id @default(cuid())
+  bookingId   String
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  displayName String
+
+  @@index([bookingId])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  booking               Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId String?       @unique
+  amountCents           Int
+  status                PaymentStatus
+  createdAt             DateTime      @default(now())
+}
+
+model ScoreEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playedDate DateTime @db.Date
+  grossScore Int
+  netScore   Int?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([playedDate])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([adminUserId])
+}

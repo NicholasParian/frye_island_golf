@@ -1,0 +1,23 @@
+{
+  "name": "frye-island-golf",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "scripts": {
+    "postinstall": "npm run build -w @fig/shared",
+    "build": "npm run build -w @fig/shared && npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @fig/api",
+    "dev:web": "npm run dev -w @fig/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:generate": "node scripts/with-repo-env.cjs -- npm run prisma:generate -w @fig/api",
+    "db:migrate": "node scripts/with-repo-env.cjs -- npm run prisma:migrate -w @fig/api",
+    "db:push": "node scripts/with-repo-env.cjs -- npm run prisma:push -w @fig/api",
+    "db:seed": "node scripts/with-repo-env.cjs -- npm run prisma:seed -w @fig/api"
+  }
+}

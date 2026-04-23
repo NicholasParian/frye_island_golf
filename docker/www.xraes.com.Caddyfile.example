@@ -1,0 +1,15 @@
+# Example for Caddy (https://caddyserver.com/) on the same host as Docker Compose.
+# Prefer the shared multi-site config in the `proxy_service` Git repo (Docker + `xraes_proxy` + path `/fryeIslandGolf`).
+
+# 1. Point DNS A/AAAA for www.xraes.com and xraes.com to this server.
+# 2. `docker network create xraes_proxy` (or start the proxy stack first), set PUBLIC_PATH_PREFIX=/fryeIslandGolf, then `docker compose up` for this app.
+# 3. The legacy all-in-one case: if you proxy only to localhost, expose the web service on 8080 and:
+#    Install Caddy, copy the site blocks below to /etc/caddy/Caddyfile, then: sudo systemctl reload caddy
+
+# www.xraes.com {
+#	encode gzip zstd
+#	reverse_proxy 127.0.0.1:8080
+# }
+# xraes.com {
+#	redir https://www.xraes.com{uri} permanent
+# }
