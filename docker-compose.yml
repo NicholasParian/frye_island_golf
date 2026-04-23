@@ -1,6 +1,10 @@
+# `db` and `api` are only on `frye_island_golf` (isolated from other subprojects' stacks and from `xraes_proxy`).
+# `web` joins that network to reach the API, and joins `xraes_proxy` so the edge (Caddy) can reach the UI only.
 services:
   db:
     image: postgres:16-alpine
+    networks:
+      - frye_island_golf
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -21,6 +25,8 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
+    networks:
+      - frye_island_golf
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/frye_island_golf?schema=public
       PORT: "4000"
@@ -65,12 +71,15 @@ services:
       api:
         condition: service_healthy
     networks:
-      default: {}
+      frye_island_golf: {}
       xraes_proxy:
         aliases:
           - frye-web
 
 networks:
+  frye_island_golf:
+    name: frye_island_golf
+    driver: bridge
   xraes_proxy:
     name: xraes_proxy
     external: true
